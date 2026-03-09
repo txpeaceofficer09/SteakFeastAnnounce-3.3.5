@@ -1,0 +1,4 @@
+## Interface: 30300
+## Title: Steak Feast Announce
+## Notes: Let everyone know when someone drops a feast.
+Core.lua
