@@ -71,7 +71,7 @@ f:SetScript("OnEvent", function(self, event, ...)
 		if #unbuffed == 0 then
 			SendChatMessage("All group members are well fed.", chatType)
 		else
-			SendChatMessage("Missing Feast: "..table.concat(unbuffed, ", ")
+			SendChatMessage("Missing Feast: "..table.concat(unbuffed, ", "), chatType)
 		end
 	end
 end)
