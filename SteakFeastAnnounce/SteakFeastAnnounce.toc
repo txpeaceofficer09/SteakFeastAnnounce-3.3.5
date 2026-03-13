@@ -1,4 +1,6 @@
 ## Interface: 30300
 ## Title: Steak Feast Announce
 ## Notes: Let everyone know when someone drops a feast.
+## Version: 1.0.0
+## Author: SoonBeSteak
 Core.lua
