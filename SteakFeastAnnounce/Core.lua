@@ -1,8 +1,5 @@
 local f = CreateFrame("Frame", nil, UIParent)
 
-f:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
-f:RegisterEvent("READY_CHECK")
-
 local function HasFeast(unit)
 	local isWellFed = false
 
@@ -22,38 +19,36 @@ local function HasFeast(unit)
 	return isWellFed
 end
 
-f:SetScript("OnEvent", function(self, event, ...)
-	local _, subEvent, srcGUID, srcName, srcFlags, dstGUID, dstName, dstFlags, spellID, spellName, spellSchool = ...
-
+local function OnEvent(self, event, timestamp, subEvent, srcGUID, srcName, srcFlags, dstGUID, dstName, dstFlags, spellID, spellName, spellSchool)
 	local chatType = "YELL"
+	local x, y = 0, 0
 
 	if GetNumRaidMembers() > 0 then
 		for i=1,40 do
 			if UnitExists("raid"..i) and UnitGUID("raid"..i) == srcGUID then
-				chatType = "RAID"
+				x, y = GetPlayerMapPosition("raid"..i)
+				chatType = (UnitIsGroupLeader("player") or UnitIsGroupAssistant("player")) and "RAID_WARNING" or "RAID"
 				break
 			end
 		end
 	elseif GetNumPartyMembers() > 0 then
 		for i=1,4 do
 			if UnitExists("party"..i) and UnitGUID("party"..i) == srcGUID then
+				x, y = GetPlayerMapPosition("party"..i)
 				chatType = "PARTY"
 				break
 			end
 		end
 	end
 	
+	local msg = "%s dropped a %s at [%.01d, %.01d]. Eat up!"
 	
 	if subEvent == "SPELL_CREATE" then
 		if spellID == 57426 or destName == "Fish Feast" then
-			local link = GetSpellLink(57397) or GetSpellLink(57426)
-			if link then
-				SendChatMessage(srcName.." dropped a "..link..".  Eat up!", chatType)
-			else
-				SendChatMessage(srcName.." dropped a Fish Feast.  Eat up!", chatType)
-			end
+			local link = GetSpellLink(57397) or GetSpellLink(57426) or "Fish Feast"
+			SendChatMessage(msg:format(srcName, link, x*100, y*100), chatType)
 		end
-	elseif subEvent == "READY_CHECK" then
+	elseif event == "READY_CHECK" then
 		local prefix = GetNumRaidMembers() > 0 and "raid" or "party"
 		local numMembers = prefix == "raid" and GetNumRaidMembers() or GetNumPartyMembers()
 		local unbuffed = {}
@@ -74,4 +69,9 @@ f:SetScript("OnEvent", function(self, event, ...)
 			SendChatMessage("Missing Feast: "..table.concat(unbuffed, ", "), chatType)
 		end
 	end
-end)
+end
+
+f:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
+f:RegisterEvent("READY_CHECK")
+
+f:SetScript("OnEvent", OnEvent)
