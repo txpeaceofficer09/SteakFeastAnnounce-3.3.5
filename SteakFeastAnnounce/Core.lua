@@ -16,23 +16,45 @@ local function HasFeast(unit)
 	return false
 end
 
+local function GetUnitLink(unit)
+		local name = UnitName(unit)
+		local _, class = UnitClass(unit)
+		local r, g, b = RAID_CLASS_COLORS[class].r, RAID_CLASS_COLORS[class].g, RAID_CLASS_COLORS[class].b
+
+		return ("|cff%02x%02x%02x|Hplayer:%s|h[%s]|h|r"):format(r*255, g*255, b*255, name, name)
+end
+
+local function GetColoredName(unit)
+		local name = UnitName(unit)
+		local _, class = UnitClass(unit)
+		local r, g, b = RAID_CLASS_COLORS[class].r, RAID_CLASS_COLORS[class].g, RAID_CLASS_COLORS[class].b
+
+		return ("|cff%02x%02x%02x%s|r"):format(r*255, g*255, b*255, name)
+end
+
 local function OnEvent(self, event, timestamp, subEvent, srcGUID, srcName, srcFlags, dstGUID, dstName, dstFlags, spellID, spellName, spellSchool)
 	local chatType = "YELL"
 	local x, y = 0, 0
 
 	if GetNumRaidMembers() > 0 then
+		if UnitIsRaidOfficer("player") or UnitIsPartyLeader("player") then
+			chatType = "RAID_WARNING"
+		else
+			chatType = "RAID"
+		end
+
 		for i=1,40 do
 			if UnitExists("raid"..i) and UnitGUID("raid"..i) == srcGUID then
 				x, y = GetPlayerMapPosition("raid"..i)
-				chatType = (UnitIsRaidOfficer(self.unit) or UnitIsPartyLeader(self.unit)) and "RAID_WARNING" or "RAID"
 				break
 			end
 		end
 	elseif GetNumPartyMembers() > 0 then
+		chatType = "PARTY"
+
 		for i=1,4 do
 			if UnitExists("party"..i) and UnitGUID("party"..i) == srcGUID then
 				x, y = GetPlayerMapPosition("party"..i)
-				chatType = "PARTY"
 				break
 			end
 		end
@@ -55,7 +77,9 @@ local function OnEvent(self, event, timestamp, subEvent, srcGUID, srcName, srcFl
 					icon:SetPoint("CENTER", MapFrameSC, "TOPLEFT", x*MapFrameSC:GetWidth(), -y*MapFrameSC:GetHeight())
 
 					icon.expiration = GetTime() + 180
-					
+					icon.srcName = srcName
+					icon.link = link
+
 					icon:SetScript("OnEnter", function(self)
 						GameTooltip:SetText("Fish Feast")
 						GameTooltip:AddLine(("Time remaining: %ss"):format(self.expiration - GetTime()))
@@ -69,6 +93,8 @@ local function OnEvent(self, event, timestamp, subEvent, srcGUID, srcName, srcFl
 						self.timer = 0
 						self:Hide()
 						self:SetScript("OnUpdate", nil)
+						
+						SendChatMessage(("%s's %s has expired."):format(srcName, link), chatType)
 					end)
 				end
 			end
@@ -77,26 +103,33 @@ local function OnEvent(self, event, timestamp, subEvent, srcGUID, srcName, srcFl
 		local prefix = GetNumRaidMembers() > 0 and "raid" or "party"
 		local numMembers = prefix == "raid" and GetNumRaidMembers() or GetNumPartyMembers()
 		local unbuffed = {}
+		local members = {}
 
 		for i=1,numMembers do
 			local unit = prefix..i
-			local name = UnitName(unit)
-
-			local unitLink = string.format("|Hplayer:%s|h[%s]|h", name, name)
-			--if not HasFeast(unit) then table.insert(unbuffed, unitLink) end
-			if not HasFeast(unit) then unbuffed[i] = unitLink end
+			--local unitLink = GetUnitLink(unit)
+			--local unitLink = UnitName(unit)
+			local unitLink = GetColoredName(unit)
+			
+			if not HasFeast(unit) then table.insert(unbuffed, unitLink) end
 		end
 
-		local playerLink = string.format("|Hplayer:%s|h[%s]|h", UnitName("player"), UnitName("player"))
+		--local playerLink = GetUnitLink("player")
+		local playerLink = UnitName("player")
+		
 		if prefix == "party" and not HasFeast("player") then table.insert(unbuffed, playerLink) end
+
 		local message = "All group members are well fed."
 
 		if #unbuffed > 0 then
 			message = ("Missing Feast: %s"):format(table.concat(unbuffed, ", "))
 		end
-		
-		--SendChatMessage(message, chatType)
-		print(message)
+
+		if InCombatLockdown() then
+			print(message)
+		else		
+			SendChatMessage(message, chatType)
+		end
 	end
 end
 
