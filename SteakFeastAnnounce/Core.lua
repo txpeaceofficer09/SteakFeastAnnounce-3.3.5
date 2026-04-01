@@ -65,7 +65,12 @@ local function OnEvent(self, event, timestamp, subEvent, srcGUID, srcName, srcFl
 	if subEvent == "SPELL_CREATE" then
 		if spellID == 57426 or destName == "Fish Feast" then
 			local link = GetSpellLink(57397) or GetSpellLink(57426) or "Fish Feast"
-			SendChatMessage(msg:format(srcName, link, x*100, y*100), chatType)
+
+			if InCombatLockdown() then
+				print(msg:format(srcName, link, x*100, y*100))
+			else
+				SendChatMessage(msg:format(srcName, link, x*100, y*100), chatType)
+			end
 
 			if IsAddOnLoaded("SteakMinimap") then
 				if x > 0 and y > 0 then
@@ -93,8 +98,14 @@ local function OnEvent(self, event, timestamp, subEvent, srcGUID, srcName, srcFl
 						self.timer = 0
 						self:Hide()
 						self:SetScript("OnUpdate", nil)
-						
-						SendChatMessage(("%s's %s has expired."):format(srcName, link), chatType)
+
+						local message =	("%s's %s has expired."):format(srcName, link)
+
+						if InCombatLockdown() then
+							print(message)
+						else
+							SendChatMessage(message, chatType)
+						end
 					end)
 				end
 			end
