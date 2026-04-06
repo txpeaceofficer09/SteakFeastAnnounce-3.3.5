@@ -1,5 +1,24 @@
 local f = CreateFrame("Frame", nil, UIParent)
 
+local function SendList(prefix, list, chatType)
+	local max = GetChatMaxSendLength() or 255
+	local msg = prefix
+	local first = true
+
+	for _, name in ipairs(list) do
+		local add = first and name or (", "..name)
+		first = false
+		
+		if #msg + #add >= max then
+			SendChatMessage(msg, chatType)
+			msg = prefix..name
+		else
+			msg = msg..add
+		end
+	end
+end
+
+
 local function HasFeast(unit)
 	local b = 1
 	while true do
@@ -130,16 +149,18 @@ local function OnEvent(self, event, timestamp, subEvent, srcGUID, srcName, srcFl
 		
 		if prefix == "party" and not HasFeast("player") then table.insert(unbuffed, playerLink) end
 
-		local message = "All group members are well fed."
-
-		if #unbuffed > 0 then
-			message = ("Missing Feast: %s"):format(table.concat(unbuffed, ", "))
-		end
-
 		if InCombatLockdown() then
-			print(message)
-		else		
-			SendChatMessage(message, chatType)
+			if #unbuffed > 0 then
+				print(("Missing Feast: %s"):format(table.concat(unbuffed, ", ")))
+			else
+				print("All group members are well fed.")
+			end
+		else
+			if #unbuffed > 0 then
+				SendList("Missing Feast: ", unbuffed, chatType)
+			else
+				SendChatMessage("All group members are well fed.", chatType)
+			end
 		end
 	end
 end
