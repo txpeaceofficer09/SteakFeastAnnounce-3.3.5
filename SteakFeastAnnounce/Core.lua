@@ -1,7 +1,8 @@
 local f = CreateFrame("Frame", nil, UIParent)
 
 local function SendList(prefix, list, chatType)
-	local max = GetChatMaxSendLength() or 255
+	--local max = 255
+	local max = 245
 	local msg = prefix
 	local first = true
 
