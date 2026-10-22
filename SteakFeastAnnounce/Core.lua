@@ -9,7 +9,7 @@ local function SendList(prefix, list, chatType)
 	for _, name in ipairs(list) do
 		local add = first and name or (", "..name)
 		first = false
-		
+
 		if #msg + #add >= max then
 			SendChatMessage(msg, chatType)
 			msg = prefix..name
@@ -79,9 +79,9 @@ local function OnEvent(self, event, timestamp, subEvent, srcGUID, srcName, srcFl
 			end
 		end
 	end
-	
+
 	local msg = "%s dropped a %s at [%.01d, %.01d]. Eat up!"
-	
+
 	if subEvent == "SPELL_CREATE" then
 		if spellID == 57426 or destName == "Fish Feast" then
 			local link = GetSpellLink(57397) or GetSpellLink(57426) or "Fish Feast"
@@ -92,14 +92,14 @@ local function OnEvent(self, event, timestamp, subEvent, srcGUID, srcName, srcFl
 				SendChatMessage(msg:format(srcName, link, x*100, y*100), chatType)
 			end
 
-			if IsAddOnLoaded("SteakMinimap") then
+			--if IsAddOnLoaded("SteakMinimap") then
 				if x > 0 and y > 0 then
-					local icon = CreateFrame("Button", nil, MapFrameSC)
-					icon:SetSize(12, 12)
+					local icon = CreateFrame("Button", nil, Minimap)
+					icon:SetSize(32, 32)
 					local tex = icon:CreateTexture(nil, "BACKGROUND")
 					tex:SetAllPoints()
 					tex:SetTexture("Interface\\Icons\\inv_misc_fish_52")
-					icon:SetPoint("CENTER", MapFrameSC, "TOPLEFT", x*MapFrameSC:GetWidth(), -y*MapFrameSC:GetHeight())
+					icon:SetPoint("CENTER", Minimap, "TOPLEFT", x*Minimap:GetWidth(), -y*Minimap:GetHeight())
 
 					icon.expiration = GetTime() + 180
 					icon.srcName = srcName
@@ -111,7 +111,7 @@ local function OnEvent(self, event, timestamp, subEvent, srcGUID, srcName, srcFl
 					end)
 
 					icon:SetScript("OnLeave", function(self) GameTooltip:Hide() end)
-					
+
 					icon:SetScript("OnUpdate", function(self, elapsed)
 						self.timer = (self.timer or 0) + elapsed
 						if self.timer < 180 then return end
@@ -128,7 +128,7 @@ local function OnEvent(self, event, timestamp, subEvent, srcGUID, srcName, srcFl
 						end
 					end)
 				end
-			end
+			--end
 		end
 	elseif event == "READY_CHECK" then
 		local prefix = GetNumRaidMembers() > 0 and "raid" or "party"
@@ -141,13 +141,13 @@ local function OnEvent(self, event, timestamp, subEvent, srcGUID, srcName, srcFl
 			--local unitLink = GetUnitLink(unit)
 			--local unitLink = UnitName(unit)
 			local unitLink = GetColoredName(unit)
-			
+
 			if not HasFeast(unit) then table.insert(unbuffed, unitLink) end
 		end
 
 		--local playerLink = GetUnitLink("player")
 		local playerLink = UnitName("player")
-		
+
 		if prefix == "party" and not HasFeast("player") then table.insert(unbuffed, playerLink) end
 
 		if InCombatLockdown() then
