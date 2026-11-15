@@ -3,4 +3,9 @@
 ## Notes: Let everyone know when someone drops a feast.
 ## Version: 1.0.0
 ## Author: SoonBeSteak
+## OptionalDeps: Astrolabe
+Libs\Astrolabe\DongleStub.lua
+Libs\Astrolabe\AstrolabeMapMonitor.lua
+Libs\Astrolabe\Astrolabe.lua
+
 Core.lua
